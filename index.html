@@ -367,8 +367,9 @@ tbody td{padding:10px 12px;font-size:.84rem;white-space:nowrap}
 <div class="sb-lbl">メニュー</div>
 <div class="sb-nav">
 <div class="sb-it act" data-tab="dash" onclick="go('dash')"><span class="ic">📊</span><span>ダッシュボード</span></div>
-<div class="sb-it" data-tab="search" onclick="go('search')"><span class="ic">🔍</span><span>案件検索</span></div>
-<div class="sb-it" data-tab="mgmt" onclick="go('mgmt')"><span class="ic">📋</span><span>案件管理</span><span class="bg" id="mgB" style="display:none"></span></div>
+<div class="sb-it" data-tab="search" onclick="goSearchAll()"><span class="ic">🔍</span><span>案件検索</span></div>
+<div class="sb-it" data-tab="mgmt" onclick="go('mgmt')"><span class="ic">📋</span><span>買取案件管理</span><span class="bg" id="mgB" style="display:none"></span></div>
+<div class="sb-it" data-tab="chukai" onclick="goChukai()"><span class="ic">🤝</span><span>媒介</span></div>
 <div class="sb-it sb-sub" id="sbPh0" data-tab="mgmt" onclick="goPhase('overview')" style="display:none"><span class="ic">📊</span><span>案件管理</span></div>
 <div class="sb-it sb-sub" id="sbPh1" data-tab="mgmt" onclick="goPhase('contract')" style="display:none"><span class="ic">①</span><span>買取契約</span></div>
 <div class="sb-it sb-sub" id="sbPh2" data-tab="mgmt" onclick="goPhase('koji')" style="display:none"><span class="ic">②</span><span>工事準備</span></div>
@@ -1002,6 +1003,22 @@ setv('f-bname',cur.bname||'');setv('f-bphone',cur.bphone||'');setv('f-bemail',cu
 setv('f-commS',cur.commS?Number(cur.commS).toLocaleString():'');setv('f-commB',cur.commB?Number(cur.commB).toLocaleString():'');
 if(isC&&(phase==='koji'||phase==='purchase'))setPhase('overview');
 }
+let searchTypeFilter=null;
+function goChukai(){
+searchTypeFilter='仲介';
+const bar=document.getElementById('stabBar');
+if(bar)bar.innerHTML=PIPE_STATUSES_CHUKAI.map(s=>'<div class="stab" data-st="'+s+'" onclick="selectSearchStatus(\''+s+'\')">'+s+'</div>').join('');
+go('search');
+document.querySelectorAll('.sb-it[data-tab]').forEach(s=>s.classList.toggle('act',s.dataset.tab==='chukai'));
+selectSearchStatus('査定中');
+}
+function goSearchAll(){
+searchTypeFilter=null;
+const bar=document.getElementById('stabBar');
+if(bar)bar.innerHTML=ALL_PIPE_STATUSES.map(s=>'<div class="stab" data-st="'+s.replace(/'/g,"\\'")+'" onclick="selectSearchStatus(\''+s.replace(/'/g,"\\'")+'\')">'+s+'</div>').join('');
+go('search');
+document.querySelectorAll('.stab').forEach(t=>t.classList.toggle('act',t.dataset.st===curSearchStatus));
+}
 function initPipeSel(){const sel=document.getElementById('cPipeSel');sel.innerHTML=PIPE_STATUSES.map(s=>'<option value="'+s+'">'+s+'</option>').join('')}
 function initSfBar(){const bar=document.getElementById('sfBar');if(!bar)return;bar.innerHTML='<button class="sf-btn act" onclick="filterPS(\'all\',this)">全て</button>'+PIPE_STATUSES.map(s=>'<button class="sf-btn" onclick="filterPS(\''+s+'\',this)">'+s+'</button>').join('')}
 let curPSFilter='all';
@@ -1504,6 +1521,7 @@ targetStatuses.push(COMBO_MAP[curSearchStatus]);
 }
 // Filter by status
 let results=db.filter(d=>targetStatuses.includes(d.pipeStatus));
+if(searchTypeFilter)results=results.filter(d=>d.type===searchTypeFilter);
 // Filter by scope
 const allChk=document.getElementById('scopeAll').checked;
 if(!allChk){
